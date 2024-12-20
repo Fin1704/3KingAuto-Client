@@ -25,38 +25,40 @@ public class Enemy : CharacterBase
 
         HandleAI();
     }
-protected override void Die()
+    protected override void Die()
     {
         base.Die();
         StartCoroutine(Dispawn());
     }
- public void SetDataByCharacter(Character data){
-        maxHP=data.hp;
-        attackMin=data.attackMin;
-        attackMax=data.attackMax;
-        speed=data.moveSpeed;
-        attackSpeed=data.attackSpeed;
+    public void SetDataByCharacter(Character data)
+    {
+        maxHP = data.hp;
+        attackMin = data.attackMin;
+        attackMax = data.attackMax;
+        speed = data.moveSpeed;
+        attackSpeed = data.attackSpeed;
     }
     private IEnumerator Dispawn()
     {
         yield return new WaitForSeconds(1.5f);
         Destroy(gameObject);
-         if (itemDropPrefab != null)
+        if (itemDropPrefab != null)
         {
-           
-            GameObject item = Instantiate(itemDropPrefab, transform.position, Quaternion.identity,UIOnMap.transform);
+
+            GameObject item = Instantiate(itemDropPrefab, transform.position, Quaternion.identity, UIOnMap.transform);
             // ItemDrop itemDrop = item.GetComponent<ItemDrop>();
         }
     }
     void FixedUpdate()
     {
-        
+
         if (!isChasing && !isAttacking && !isDead && target == null)
         {
-            
+
             MoveRandomly();
-            if (target==null){
-                target=FindNearestPlayer();
+            if (target == null)
+            {
+                target = FindNearestPlayer();
             }
         }
         if (!isChasing && !isAttacking && !isDead && target != null)
@@ -91,8 +93,8 @@ protected override void Die()
             }
             else
             {
-                 isChasing=false;
-                isAttacking=false;
+                isChasing = false;
+                isAttacking = false;
                 MoveTowardsTarget();
             }
         }
@@ -157,7 +159,7 @@ protected override void Die()
         {
             transform.localScale = new Vector3(-1, 1, 1);
         }
-    
+
     }
 
 

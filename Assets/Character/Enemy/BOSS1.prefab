@@ -190,8 +190,8 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1614854565
+  m_SortingLayer: 2
   m_SortingOrder: 5
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!114 &5299898952334297279
@@ -257,23 +257,39 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f05f57723981f04c8016f1f5cfafafd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  animation:
+    _serializedList:
+    - Key: attack
+      Value: sword_attack
+    - Key: death
+      Value: dead
+    - Key: moveRevive
+      Value: walk2
+    - Key: recovery
+      Value: skid
+    - Key: run
+      Value: run
+    - Key: idle
+      Value: idle_1
   skeletonAnimation: {fileID: 5299898952334297279}
   characterName: Monster
   maxHP: 1000
   currentHP: 0
   attackMin: 10
   attackMax: 20
+  boxColliderCenter: {x: 0, y: 0}
   speed: 1
   defense: 1
   attackSpeed: 2
   isDead: 0
+  isUseSkill: 0
   isChasing: 0
   isAttacking: 0
   damageText: {fileID: 9133808935364483744}
+  recoveryText: {fileID: 0}
   randomDameTextRange: 0.5
   healthBar: {fileID: 6739990472567845066}
-  boxCollider2D: {fileID: 0}
-  isReviving: 0
+  skills: []
   detectionRange: 4
   attackRange: 0.7
   target: {fileID: 0}
@@ -426,7 +442,7 @@ Canvas:
   m_VertexColorAlwaysGammaSpace: 0
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
-  m_SortingLayerID: 0
+  m_SortingLayerID: 1614854565
   m_SortingOrder: 9
   m_TargetDisplay: 0
 --- !u!114 &6507894146132148564

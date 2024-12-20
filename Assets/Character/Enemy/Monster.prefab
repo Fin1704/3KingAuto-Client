@@ -71,7 +71,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 10, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6342022124607059127
 CanvasRenderer:
@@ -192,8 +192,8 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1614854565
+  m_SortingLayer: 2
   m_SortingOrder: 6
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!114 &5299898952334297279
@@ -259,30 +259,39 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f05f57723981f04c8016f1f5cfafafd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  attackName: sword_attack
-  runName: run
-  idleName: idle_1
-  deathName: dead
-  moveGoHomeName: walk2
-  recoveryName: skid
+  animationList:
+    _serializedList:
+    - Key: recovery
+      Value: 
+    - Key: moveRevive
+      Value: 
+    - Key: run
+      Value: run
+    - Key: idle
+      Value: idle_1
+    - Key: death
+      Value: dead
+    - Key: attack
+      Value: sword_attack
   skeletonAnimation: {fileID: 5299898952334297279}
   characterName: Monster
   maxHP: 100
   currentHP: 0
   attackMin: 5
   attackMax: 10
+  boxColliderCenter: {x: 0, y: 0}
   speed: 1
   defense: 1
   attackSpeed: 1
   isDead: 0
+  isUseSkill: 0
   isChasing: 0
   isAttacking: 0
   damageText: {fileID: 9133808935364483744}
   recoveryText: {fileID: 0}
   randomDameTextRange: 0.5
   healthBar: {fileID: 6739990472567845066}
-  boxCollider2D: {fileID: 0}
-  isReviving: 0
+  skills: []
   detectionRange: 2
   attackRange: 0.7
   target: {fileID: 0}
@@ -435,7 +444,7 @@ Canvas:
   m_VertexColorAlwaysGammaSpace: 0
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
-  m_SortingLayerID: 0
+  m_SortingLayerID: 1456820861
   m_SortingOrder: 9
   m_TargetDisplay: 0
 --- !u!114 &6507894146132148564
@@ -647,7 +656,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0.827}
+  m_AnchoredPosition: {x: 0.037, y: 0.753}
   m_SizeDelta: {x: 160, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &220168212164800642
@@ -697,7 +706,7 @@ MonoBehaviour:
   m_MinValue: 0
   m_MaxValue: 1
   m_WholeNumbers: 0
-  m_Value: 0.368
+  m_Value: 0
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []

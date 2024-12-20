@@ -12,10 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11a0383550a8d1543aca285067a495d6, type: 3}
   m_Name: CharacterPrefabData
   m_EditorClassIdentifier: 
-  characterPrefabs:
-  - id: 1
-    prefab: {fileID: 6459993883557963903, guid: a3e2a6b9489fecb429940ef3dabc90e8, type: 3}
-    image: {fileID: 245375970013939018, guid: ebfdea92d18d1214f9f0c06c5e63fbd4, type: 3}
-  - id: 2
-    prefab: {fileID: 6459993883557963903, guid: 79de0d0c6b40b2d47b0e00302ea520ff, type: 3}
-    image: {fileID: 245375970013939018, guid: decef677023e4554b9ccd644c0e59f73, type: 3}
+  characterMasterData:
+    _serializedList:
+    - Key: 1
+      Value: {fileID: 11400000, guid: 43cd8067eee8d0b489179fdf8f7e372b, type: 2}
+    - Key: 2
+      Value: {fileID: 11400000, guid: 6cddee46c6ce59c44925683aadaee930, type: 2}

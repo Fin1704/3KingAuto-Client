@@ -43,3 +43,15 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: MAP
+    uniqueID: 1603780883
+    locked: 0
+  - name: ENITY
+    uniqueID: 1614854565
+    locked: 0
+  - name: BeforeEnity
+    uniqueID: 1456820861
+    locked: 0
+  - name: UI
+    uniqueID: 138935403
+    locked: 0

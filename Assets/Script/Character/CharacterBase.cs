@@ -1,17 +1,19 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using AYellowpaper.SerializedCollections;
 using Spine.Unity;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 public class CharacterBase : MonoBehaviour
 {
-    public string attackName="sword_attack";
-    public string runName="run";
-    public string idleName="idle_1";
-    public string deathName="dead";
-    public string moveGoHomeName="walk2";
-    public string recoveryName="skid";
+
+
+    [SerializedDictionary("Animation", "Value")]
+    public SerializedDictionary<string, string> animationList;
     public SkeletonAnimation skeletonAnimation;
     protected Canvas UIOnMap;
     public string characterName;
@@ -19,49 +21,130 @@ public class CharacterBase : MonoBehaviour
     public float currentHP;
     public float attackMin = 5f;
     public float attackMax = 10f;
-
+    public Vector2 boxColliderCenter;
     public float speed = 3f;
     public float defense = 1f;
     public float attackSpeed = 1f;
-    public bool isDead;
+    public bool isDead = false;
+    public bool isUseSkill = false;
+
     public bool isChasing = false;
     public bool isAttacking = false;
     public TMP_Text damageText;
-        public TMP_Text recoveryText;
+    public TMP_Text recoveryText;
 
     public float randomDameTextRange = 0.5f;
     public HealthBar healthBar;
-    public BoxCollider2D boxCollider2D;
+    protected BoxCollider2D boxCollider2D;
     private string currentAnimation = "";
     protected Rigidbody2D rb;
-    public bool isReviving = false;
+    protected bool isReviving = false;
     protected float lastAttackTime = 0f;
-
+    public List<Skill> skills;
+    private Dictionary<string, float> skillCooldownTimers = new Dictionary<string, float>();
+private int baseSortingOrder = 0; 
     public virtual void Start()
     {
+
         currentHP = maxHP;
         isDead = false;
         boxCollider2D = GetComponent<BoxCollider2D>();
         rb = GetComponent<Rigidbody2D>();
         GameObject canvasObject = GameObject.Find("UIOnMap");
-        UIOnMap=canvasObject.GetComponent<Canvas>();
+        UIOnMap = canvasObject.GetComponent<Canvas>();
         if (healthBar != null)
         {
             healthBar.SetMaxHealth(maxHP);
         }
     }
+    public void UseSkill(Skill skill, CharacterBase target)
+    {
+        if ((!isUseSkill) && (!skillCooldownTimers.ContainsKey(skill.skillName) || skillCooldownTimers[skill.skillName] <= 0f))
+        {
+            if (Random.value <= skill.chanceToTrigger)
+            {
+                isUseSkill = true;
+                isAttacking=false;
+                isChasing=false;
+                       skeletonAnimation.AnimationState.SetAnimation(0, skill.skillAnimation, false);
 
+
+                StartCoroutine(TriggerSkillEffect(skill, target));
+                skillCooldownTimers[skill.skillName] = skill.cooldownTime;
+            }
+
+        }
+
+    }
+
+    // Coroutine to trigger the skill effect and apply damage to the target
+    private IEnumerator TriggerSkillEffect(Skill skill, CharacterBase target)
+    {
+        if (target == null)
+        {
+            Debug.LogError("Target is null. Cannot proceed.");
+            yield break;
+        }
+
+        // Get the target's SkeletonAnimation component
+        SkeletonAnimation targetAnimation = target.GetComponent<SkeletonAnimation>();
+       
+        Vector2 spawnPosition = target.boxColliderCenter + new Vector2(0.5f, 0); ;
+        GameObject effectInstance = Instantiate(skill.skillEffectPrefab, spawnPosition, Quaternion.identity);
+
+        SkeletonAnimation skeletonAnimation_skill = effectInstance.GetComponent<SkeletonAnimation>();
+        skeletonAnimation_skill.GetComponent<MeshRenderer>().sortingOrder = 20000-Mathf.RoundToInt(effectInstance.transform.position.y*10)+ 1;
+
+
+        skeletonAnimation_skill.AnimationState.SetAnimation(0, "animation", false);
+        
+
+        float animationDuration_skill = skeletonAnimation_skill.Skeleton.Data.FindAnimation("animation").Duration;
+        yield return new WaitForSeconds(animationDuration_skill);
+        
+
+        Destroy(effectInstance);
+
+
+        // Play the target's hit animation
+        // if (targetAnimation != null)
+        // {
+        //     targetAnimation.AnimationState.SetAnimation(0, skill.targetHitAnimation, false);
+        // }
+
+        // Apply damage to the target
+        target.TakeDamage(skill.effectValue);
+        isUseSkill = false;
+
+    }
     public virtual void Update()
     {
+        skeletonAnimation.GetComponent<MeshRenderer>().sortingOrder = 20000-Mathf.RoundToInt(transform.position.y*10)+ baseSortingOrder;
         if (!boxCollider2D)
         {
             boxCollider2D = GetComponent<BoxCollider2D>();
         }
+        else
+        {
+
+            boxColliderCenter = boxCollider2D.bounds.center;
+
+        }
+        List<string> keys = new List<string>(skillCooldownTimers.Keys);
+        foreach (var key in keys)
+        {
+            if (skillCooldownTimers[key] > 0f)
+            {
+                skillCooldownTimers[key] -= Time.deltaTime;
+            }
+        }
         healthBar.SetByXDirection(transform.localScale.x);
         if (isDead)
         {
-            if(!isReviving){
+            if (!isReviving)
+            {
                 rb.velocity = Vector2.zero;
+                PlayAnimation(animationList["idle"], true);
             }
             if (boxCollider2D.enabled)
             {
@@ -72,7 +155,7 @@ public class CharacterBase : MonoBehaviour
             return;
         }
 
-        if (!isChasing)
+        if (!isChasing && !isUseSkill)
         {
             if (!boxCollider2D.enabled)
             {
@@ -81,11 +164,11 @@ public class CharacterBase : MonoBehaviour
 
             if (rb.velocity.magnitude > 0.3f)
             {
-                PlayAnimation(runName, true);
+                PlayAnimation(animationList["run"], true);
             }
             else
             {
-                PlayAnimation(idleName, true);
+                PlayAnimation(animationList["idle"], true);
             }
         }
 
@@ -97,7 +180,7 @@ public class CharacterBase : MonoBehaviour
         {
             boxCollider2D.enabled = false;
         }
-        PlayAnimation(attackName, true);
+        PlayAnimation(animationList["attack"], true);
     }
 
 
@@ -120,7 +203,7 @@ public class CharacterBase : MonoBehaviour
     protected virtual void Die()
     {
 
-        PlayAnimation(deathName, false);
+        PlayAnimation(animationList["death"], false);
         isDead = true;
         isChasing = false;
         isAttacking = false;

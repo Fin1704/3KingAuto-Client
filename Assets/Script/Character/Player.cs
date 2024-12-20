@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Player : CharacterBase
@@ -7,19 +8,22 @@ public class Player : CharacterBase
     private Vector3 targetPosition;
     public float detectionRange = 5f;
     public float attackRange = 1f;
-    public Enemy target;
+    protected CharacterBase target;
+
     public LayerMask enemyLayer;
     private Vector2 randomDirection;
     private float randomMoveTimer = 0f;
     private float randomMoveInterval = 2f;
     private Coroutine movementCoroutine;
     private Coroutine regenCoroutine;
-    public void SetDataByCharacter(Character data){
-        maxHP=data.hp;
-        attackMin=data.attackMin;
-        attackMax=data.attackMax;
-        speed=data.moveSpeed;
-        attackSpeed=data.attackSpeed;
+
+    public void SetDataByCharacter(Character data)
+    {
+        maxHP = data.hp;
+        attackMin = data.attackMin;
+        attackMax = data.attackMax;
+        speed = data.moveSpeed;
+        attackSpeed = data.attackSpeed;
     }
     public override void Start()
     {
@@ -62,11 +66,19 @@ public class Player : CharacterBase
             isChasing = false;
             isAttacking = false;
         }
+
+
+
     }
 
     private void HandleAI()
     {
         if (target == null || target.isDead)
+        {
+            target = FindNearestBoss();
+        }
+
+        if (target == null)
         {
             target = FindNearestEnemy();
         }
@@ -74,50 +86,47 @@ public class Player : CharacterBase
         if (target == null) return;
 
         float distance = Vector2.Distance(transform.position, target.transform.position);
-
         if (distance <= detectionRange)
         {
             if (distance <= attackRange)
             {
                 rb.velocity = Vector2.zero;
+
                 TryAttackTarget();
                 isChasing = true;
+
+
             }
             else
             {
-                isChasing=false;
-                isAttacking=false;
+                isChasing = false;
+                isAttacking = false;
                 MoveTowardsTarget();
             }
         }
         else
         {
+
             isChasing = false;
             rb.velocity = Vector2.zero;
+            PlayAnimation(animationList["idle"], false);
         }
     }
     private Enemy FindNearestEnemy()
     {
         Vector3 center = transform.position;
-        Collider2D boxCollider2D = GetComponent<BoxCollider2D>();
-        if (boxCollider2D != null)
-        {
-            center = boxCollider2D.bounds.center;
-        }
-
-        Collider2D[] enemiesInRange = Physics2D.OverlapCircleAll(center, detectionRange, enemyLayer);
-
-        Enemy nearestEnemy = null;
         float closestDistance = Mathf.Infinity;
+        Enemy nearestEnemy = null;
 
-        foreach (Collider2D enemyCollider in enemiesInRange)
+        // Lấy tất cả các đối tượng Enemy trong game (hoặc trong một vùng nhất định nếu bạn muốn hạn chế phạm vi)
+        Enemy[] allEnemies = FindObjectsOfType<Enemy>();
+
+        foreach (Enemy enemy in allEnemies)
         {
-            Enemy enemy = enemyCollider.GetComponent<Enemy>();
             if (enemy != null && !enemy.isDead)
             {
-                // Tính toán khoảng cách chỉ khi cần thiết
-                float distance = Vector2.Distance(center, enemy.transform.position);
-                if (distance < closestDistance)
+                float distance = Vector3.Distance(center, enemy.transform.position);
+                if (distance < detectionRange && distance < closestDistance)
                 {
                     closestDistance = distance;
                     nearestEnemy = enemy;
@@ -128,6 +137,30 @@ public class Player : CharacterBase
         return nearestEnemy;
     }
 
+    private Boss FindNearestBoss()
+    {
+        Vector3 center = transform.position;
+        float closestDistance = Mathf.Infinity;
+        Boss nearestBoss = null;
+
+        // Lấy tất cả các đối tượng Boss trong game
+        Boss[] allBosses = FindObjectsOfType<Boss>();
+
+        foreach (Boss boss in allBosses)
+        {
+            if (boss != null && !boss.isDead)
+            {
+                float distance = Vector3.Distance(center, boss.transform.position);
+                if (distance < detectionRange && distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    nearestBoss = boss;
+                }
+            }
+        }
+
+        return nearestBoss;
+    }
 
     private void MoveRandomly()
     {
@@ -150,13 +183,13 @@ public class Player : CharacterBase
 
         rb.velocity = velocity;
 
-        transform.localScale = new Vector3(randomDirection.x > 0 ? 1 : -1, 1, 1);
+        transform.localScale = new Vector3(randomDirection.x < 0 ? 1 : -1, 1, 1);
     }
 
     private void MoveTowardsTarget()
     {
-         target = FindNearestEnemy();
-        PlayAnimation(runName, true);
+        target = FindNearestEnemy();
+        PlayAnimation(animationList["run"], true);
         if (target != null)
         {
             Vector2 direction = (target.transform.position - transform.position).normalized;
@@ -170,7 +203,7 @@ public class Player : CharacterBase
 
             rb.velocity = velocity;
 
-            transform.localScale = new Vector3(direction.x > 0 ? 1 : -1, 1, 1);
+            transform.localScale = new Vector3(direction.x < 0 ? 1 : -1, 1, 1);
         }
         else
         {
@@ -187,6 +220,7 @@ public class Player : CharacterBase
             lastAttackTime = Time.time;
             Invoke(nameof(EndAttack), 0.5f);
         }
+
     }
 
     private void AttackTarget()
@@ -194,11 +228,12 @@ public class Player : CharacterBase
         if (target != null)
         {
             Vector3 direction = target.transform.position - transform.position;
-            transform.localScale = new Vector3(direction.x > 0 ? 1 : -1, 1, 1);
+            transform.localScale = new Vector3(direction.x < 0 ? 1 : -1, 1, 1);
             Attack();
             target.TakeDamage(Random.Range(attackMin, attackMax));
-            if(target.isDead){
-                target=FindNearestEnemy();
+            if (target.isDead)
+            {
+                target = FindNearestEnemy();
             }
         }
     }
@@ -208,33 +243,33 @@ public class Player : CharacterBase
         isAttacking = false;
     }
 
-   public void MoveToHome()
-{
-    // Xác định phạm vi ngẫu nhiên xung quanh homePosition
-    float randomOffsetX = Random.Range(-1f, 1f); // Phạm vi ngẫu nhiên theo trục X
-    float randomOffsetY = Random.Range(-1f, 1f); // Phạm vi ngẫu nhiên theo trục Y
-
-    // Tính toán vị trí mới (2D chỉ cần X và Y)
-    Vector2 randomPosition = new Vector2(
-        homePosition.x + randomOffsetX,
-        homePosition.y + randomOffsetY
-    );
-
-    // Gán vị trí mục tiêu
-    targetPosition = new Vector3(randomPosition.x, randomPosition.y, 0); // Đảm bảo Z = 0
-
-    // Kiểm tra và dừng Coroutine nếu đang chạy
-    if (movementCoroutine != null)
+    public void MoveToHome()
     {
-        StopCoroutine(movementCoroutine);
+        // Xác định phạm vi ngẫu nhiên xung quanh homePosition
+        float randomOffsetX = Random.Range(-1f, 1f); // Phạm vi ngẫu nhiên theo trục X
+        float randomOffsetY = Random.Range(-1f, 1f); // Phạm vi ngẫu nhiên theo trục Y
+
+        // Tính toán vị trí mới (2D chỉ cần X và Y)
+        Vector2 randomPosition = new Vector2(
+            homePosition.x + randomOffsetX,
+            homePosition.y + randomOffsetY
+        );
+
+        // Gán vị trí mục tiêu
+        targetPosition = new Vector3(randomPosition.x, randomPosition.y, 0); // Đảm bảo Z = 0
+
+        // Kiểm tra và dừng Coroutine nếu đang chạy
+        if (movementCoroutine != null)
+        {
+            StopCoroutine(movementCoroutine);
+        }
+
+        isReviving = true;
+        PlayAnimation(animationList["moveRevive"], true);
+
+        // Bắt đầu Coroutine di chuyển tới vị trí mới
+        movementCoroutine = StartCoroutine(MoveTowards(targetPosition));
     }
-
-    isReviving = true;
-    PlayAnimation(moveGoHomeName, true);
-
-    // Bắt đầu Coroutine di chuyển tới vị trí mới
-    movementCoroutine = StartCoroutine(MoveTowards(targetPosition));
-}
 
 
     private IEnumerator MoveTowards(Vector3 targetPosition)
@@ -252,14 +287,14 @@ public class Player : CharacterBase
 
             rb.velocity = velocity;
 
-            transform.localScale = new Vector3(direction.x > 0 ? 1 : -1, 1, 1);
+            transform.localScale = new Vector3(direction.x < 0 ? 1 : -1, 1, 1);
 
             yield return null;
         }
 
         if (regenCoroutine == null)
         {
-            PlayAnimation(recoveryName, true);
+            PlayAnimation(animationList["recovery"], true);
             regenCoroutine = StartCoroutine(RegenerateHealth());
         }
 
@@ -292,7 +327,7 @@ public class Player : CharacterBase
         }
         else if (collision.gameObject.CompareTag("Enity"))
         {
-           rb.velocity = Vector2.zero;
+            rb.velocity = Vector2.zero;
         }
     }
 
@@ -306,5 +341,7 @@ public class Player : CharacterBase
 
         Gizmos.color = Color.green;
         Gizmos.DrawCube(homePosition, new Vector3(0.1f, 0.1f, 0));
+
+        
     }
 }

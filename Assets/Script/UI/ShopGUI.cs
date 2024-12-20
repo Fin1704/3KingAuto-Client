@@ -17,6 +17,8 @@ private void Start()
     }
       private void openGUI()
     {
+                EventManager.FireEvent("OnOpenUI", "ShopGUI");
+
         GUI.SetActive(!GUI.activeSelf);
     }
 }

@@ -21,13 +21,15 @@ public class HeroGUI : MonoBehaviour
     private Character selectedCharacter;
     private Dictionary<int, GameObject> spawnedCharacters = new Dictionary<int, GameObject>();
     public Vector3 spawnPosition;
-
+    private Image buttonCurrent;
+    public GameObject detailPanel;
     private void Start()
     {
+        
         button.onClick.AddListener(openGUI);
         battleButton.onClick.AddListener(Battle);
-        GUI.SetActive(false);
         DisplayCharacterCards();
+        GUI.SetActive(false);
     }
 
     private void DisplayCharacterCards()
@@ -46,9 +48,10 @@ public class HeroGUI : MonoBehaviour
     }
 
     private void UpdateCardWithCharacterData(GameObject card, Character character)
+    
     {
         Transform imageTransform = card.transform.Find("Mask");
-        Instantiate(character.characterImage, imageTransform);
+        Instantiate(character.icon, imageTransform);
 
         Button button = card.GetComponent<Button>();
         if (button == null)
@@ -59,7 +62,16 @@ public class HeroGUI : MonoBehaviour
         button.onClick.RemoveAllListeners();
         button.onClick.AddListener(() =>
         {
+
+            if (buttonCurrent)
+            {
+               buttonCurrent.color=Color.red;
+            }
+            buttonCurrent=card.GetComponent<Image>();
+            buttonCurrent.color=Color.blue;
             ShowCharacterInfo(character.id);
+           
+
         });
     }
 
@@ -67,7 +79,7 @@ public class HeroGUI : MonoBehaviour
     {
         Character character = playerData.GetCharacterById(id);
         selectedCharacter = character;
-         if (battleButton != null)
+        if (battleButton != null)
         {
             TMP_Text buttonText = battleButton.GetComponentInChildren<TMP_Text>();
             if (selectedCharacter.isBattle)
@@ -81,11 +93,14 @@ public class HeroGUI : MonoBehaviour
         }
         Debug.Log($"Selected Character: {character.isBattle}");
 
-        level_text.text = character.level.ToString();
+        level_text.text = character.exp.ToString()+"/"+character.level.ToString();
         def_text.text = character.defense.ToString();
         atk_text.text = $"{character.attackMin}-{character.attackMax}";
         hp_text.text = character.hp.ToString();
+
         speed_text.text = character.moveSpeed.ToString();
+              detailPanel.SetActive(true);
+
     }
 
     private void Battle()
@@ -99,7 +114,7 @@ public class HeroGUI : MonoBehaviour
         if (selectedCharacter.isBattle)
         {
             RemoveCharacter();
-            selectedCharacter.isBattle=false;
+            selectedCharacter.isBattle = false;
             return;
         }
 
@@ -109,14 +124,14 @@ public class HeroGUI : MonoBehaviour
             return;
         }
 
-        if (selectedCharacter.characterPrefab == null)
+        if (selectedCharacter.character == null)
         {
             Debug.LogError("Character prefab is not assigned.");
             return;
         }
 
-        GameObject spawnedCharacter = Instantiate(selectedCharacter.characterPrefab, spawnPosition, Quaternion.identity);
-        Player spawnedCharacterData=spawnedCharacter.GetComponent<Player>();
+        GameObject spawnedCharacter = Instantiate(selectedCharacter.character, spawnPosition, Quaternion.identity);
+        Player spawnedCharacterData = spawnedCharacter.GetComponent<Player>();
         spawnedCharacterData.SetDataByCharacter(selectedCharacter);
         spawnedCharacters.Add(selectedCharacter.id, spawnedCharacter);
         selectedCharacter.isBattle = true;
@@ -137,6 +152,9 @@ public class HeroGUI : MonoBehaviour
 
     private void openGUI()
     {
+                EventManager.FireEvent("OnOpenUI", "HeroGUI");
+
+      detailPanel.SetActive(false);
         DisplayCharacterCards();
         GUI.SetActive(!GUI.activeSelf);
     }

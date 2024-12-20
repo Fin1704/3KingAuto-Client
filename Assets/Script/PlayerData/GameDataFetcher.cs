@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
-
+using Newtonsoft.Json;
 public class GameDataFetcher : MonoBehaviour
 {
     private string url = "https://devmini.com/characters.json";  
@@ -30,17 +30,21 @@ public class GameDataFetcher : MonoBehaviour
 
    void ProcessUserData(string json)
     {
-        UserData userData = JsonUtility.FromJson<UserData>(json);
+        UserData userData = JsonConvert.DeserializeObject<UserData>(json);
         playerData.is_get=true;
         playerData.userName = userData.userName;
         playerData.gold = userData.gold;
         playerData.gem = userData.gem;
-
-        // Thêm các tướng vào PlayerData
+        foreach (var rune in userData.runes)
+        {
+            playerData.AddRune(rune);
+        }
         foreach (var character in userData.characters)
         {
             playerData.AddCharacter(character);
         }
+
+        
     }
 }
 
@@ -51,4 +55,5 @@ public class UserData
     public int gold;
     public int gem;
     public Character[] characters;
+    public Rune[] runes;
 }

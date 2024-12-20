@@ -18,3 +18,4 @@ MonoBehaviour:
   gem: 0
   characters: []
   characterPrefabData: {fileID: 11400000, guid: 090996a9aa049a240a835d6e4b0519f8, type: 2}
+  runeMasterData: {fileID: 11400000, guid: 58855d7e32965d743a68bd4b5e32c906, type: 2}
