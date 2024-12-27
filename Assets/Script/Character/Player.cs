@@ -25,11 +25,19 @@ public class Player : CharacterBase
         speed = data.moveSpeed;
         attackSpeed = data.attackSpeed;
     }
+    private Transform cachedTransform;
+    private static readonly WaitForSeconds waitReviveTime = new WaitForSeconds(2f);
+    private static readonly WaitForSeconds waitRegenTime = new WaitForSeconds(1f);
+    private Vector3 cachedScale = Vector3.one;
+    private const float DIRECTION_RIGHT = -1f;
+    private const float DIRECTION_LEFT = 1f;
+        private readonly EnemyCache enemyCache = new EnemyCache();
+
     public override void Start()
     {
         base.Start();
+        cachedTransform = transform;
     }
-
     public override void Update()
     {
         base.Update();
@@ -142,10 +150,7 @@ public class Player : CharacterBase
         Vector3 center = transform.position;
         float closestDistance = Mathf.Infinity;
         Boss nearestBoss = null;
-
-        // Lấy tất cả các đối tượng Boss trong game
         Boss[] allBosses = FindObjectsOfType<Boss>();
-
         foreach (Boss boss in allBosses)
         {
             if (boss != null && !boss.isDead)
@@ -161,7 +166,6 @@ public class Player : CharacterBase
 
         return nearestBoss;
     }
-
     private void MoveRandomly()
     {
         if (randomMoveTimer <= 0f)
@@ -188,29 +192,32 @@ public class Player : CharacterBase
 
     private void MoveTowardsTarget()
     {
-        target = FindNearestEnemy();
-        PlayAnimation(animationList["run"], true);
-        if (target != null)
-        {
-            Vector2 direction = (target.transform.position - transform.position).normalized;
-
-            // Giới hạn tốc độ di chuyển
-            Vector2 velocity = direction * speed;
-            if (velocity.magnitude > speed)
-            {
-                velocity = velocity.normalized * speed;
-            }
-
-            rb.velocity = velocity;
-
-            transform.localScale = new Vector3(direction.x < 0 ? 1 : -1, 1, 1);
-        }
-        else
+        if (target == null)
         {
             MoveRandomly();
+            return;
+        }
+
+        PlayAnimation(animationList["run"], true);
+
+        Vector2 currentPos = cachedTransform.position;
+        Vector2 targetPos = target.transform.position;
+        Vector2 direction = targetPos - currentPos;
+        float distance = direction.magnitude;
+
+        if (distance > 0.01f)
+        {
+            direction /= distance; 
+            Vector2 velocity = direction * speed;
+            rb.velocity = velocity;
+            float newScaleX = direction.x < 0 ? DIRECTION_LEFT : DIRECTION_RIGHT;
+            if (Mathf.Abs(cachedScale.x - newScaleX) > 0.01f)
+            {
+                cachedScale.x = newScaleX;
+                cachedTransform.localScale = cachedScale;
+            }
         }
     }
-
     private void TryAttackTarget()
     {
         if (Time.time - lastAttackTime >= 1f / attackSpeed)
@@ -220,7 +227,6 @@ public class Player : CharacterBase
             lastAttackTime = Time.time;
             Invoke(nameof(EndAttack), 0.5f);
         }
-
     }
 
     private void AttackTarget()
@@ -245,49 +251,85 @@ public class Player : CharacterBase
 
     public void MoveToHome()
     {
-        // Xác định phạm vi ngẫu nhiên xung quanh homePosition
-        float randomOffsetX = Random.Range(-1f, 1f); // Phạm vi ngẫu nhiên theo trục X
-        float randomOffsetY = Random.Range(-1f, 1f); // Phạm vi ngẫu nhiên theo trục Y
-
-        // Tính toán vị trí mới (2D chỉ cần X và Y)
+        float randomOffsetX = Random.Range(-1f, 1f); 
+        float randomOffsetY = Random.Range(-1f, 1f); 
         Vector2 randomPosition = new Vector2(
             homePosition.x + randomOffsetX,
             homePosition.y + randomOffsetY
         );
-
-        // Gán vị trí mục tiêu
-        targetPosition = new Vector3(randomPosition.x, randomPosition.y, 0); // Đảm bảo Z = 0
-
-        // Kiểm tra và dừng Coroutine nếu đang chạy
+        targetPosition = new Vector3(randomPosition.x, randomPosition.y, 0); 
         if (movementCoroutine != null)
         {
             StopCoroutine(movementCoroutine);
         }
-
         isReviving = true;
         PlayAnimation(animationList["moveRevive"], true);
-
-        // Bắt đầu Coroutine di chuyển tới vị trí mới
         movementCoroutine = StartCoroutine(MoveTowards(targetPosition));
+    }
+    private class EnemyCache
+    {
+        public float lastCheckTime;
+        public CharacterBase nearestEnemy;
+        public const float CACHE_DURATION = 0.2f; 
     }
 
 
+    private CharacterBase FindNearestTarget()
+    {
+        if (Time.time - enemyCache.lastCheckTime < EnemyCache.CACHE_DURATION && enemyCache.nearestEnemy != null
+            && !enemyCache.nearestEnemy.isDead)
+        {
+            return enemyCache.nearestEnemy;
+        }
+        enemyCache.lastCheckTime = Time.time;
+        Boss nearestBoss = FindNearestBoss();
+        if (nearestBoss != null)
+        {
+            enemyCache.nearestEnemy = nearestBoss;
+            return nearestBoss;
+        }
+
+        // Then check for regular enemies
+        Enemy nearestEnemy = FindNearestEnemy();
+        enemyCache.nearestEnemy = nearestEnemy;
+        return nearestEnemy;
+    }
+    private IEnumerator RegenerateHealth()
+    {
+        float healAmount = maxHP * 0.1f;
+
+        while (currentHP < maxHP)
+        {
+            currentHP = Mathf.Min(currentHP + healAmount, maxHP);
+            ShowRecovery(healAmount);
+            healthBar.SetHealth(currentHP);
+            yield return waitRegenTime;
+        }
+
+        target = FindNearestTarget();
+        regenCoroutine = null;
+        isDead = false;
+        isReviving = false;
+        boxCollider2D.enabled = true;
+    }
+
     private IEnumerator MoveTowards(Vector3 targetPosition)
     {
-        while (Vector2.Distance(transform.position, targetPosition) > 0.1f)
+        Vector2 targetPos2D = targetPosition;
+        Vector2 velocity = Vector2.zero;
+
+        while (Vector2.Distance(cachedTransform.position, targetPos2D) > 0.1f)
         {
-            Vector2 direction = (targetPosition - transform.position).normalized;
-
-            // Giới hạn tốc độ di chuyển
-            Vector2 velocity = direction * speed;
-            if (velocity.magnitude > speed)
-            {
-                velocity = velocity.normalized * speed;
-            }
-
+            Vector2 direction = (targetPos2D - (Vector2)cachedTransform.position).normalized;
+            velocity = direction * speed;
             rb.velocity = velocity;
 
-            transform.localScale = new Vector3(direction.x < 0 ? 1 : -1, 1, 1);
+            float newScaleX = direction.x < 0 ? DIRECTION_LEFT : DIRECTION_RIGHT;
+            if (Mathf.Abs(cachedScale.x - newScaleX) > 0.01f)
+            {
+                cachedScale.x = newScaleX;
+                cachedTransform.localScale = cachedScale;
+            }
 
             yield return null;
         }
@@ -300,25 +342,6 @@ public class Player : CharacterBase
 
         rb.velocity = Vector2.zero;
     }
-
-    private IEnumerator RegenerateHealth()
-    {
-        while (currentHP < maxHP)
-        {
-            currentHP += maxHP * 0.1f;
-            currentHP = Mathf.Min(currentHP, maxHP);
-            ShowRecovery(maxHP * 0.1f);
-            healthBar.SetHealth(currentHP);
-            yield return new WaitForSeconds(1f);
-        }
-
-        target = FindNearestEnemy();
-        regenCoroutine = null;
-        isDead = false;
-        isReviving = false;
-        boxCollider2D.enabled = true;
-    }
-
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("Wall"))
@@ -342,6 +365,6 @@ public class Player : CharacterBase
         Gizmos.color = Color.green;
         Gizmos.DrawCube(homePosition, new Vector3(0.1f, 0.1f, 0));
 
-        
+
     }
 }

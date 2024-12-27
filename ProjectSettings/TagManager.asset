@@ -46,6 +46,9 @@ TagManager:
   - name: MAP
     uniqueID: 1603780883
     locked: 0
+  - name: AfterEnity
+    uniqueID: 655004491
+    locked: 0
   - name: ENITY
     uniqueID: 1614854565
     locked: 0

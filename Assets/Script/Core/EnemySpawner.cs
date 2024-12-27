@@ -1,109 +1,212 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class EnemySpawner : MonoBehaviour
 {
-    public List<GameObject> enemyPrefabs; // Danh sách các prefab của quái vật
-    public Vector2 spawnAreaMin; // Điểm bắt đầu của phạm vi spawn
-    public Vector2 spawnAreaMax; // Điểm kết thúc của phạm vi spawn
-    public int maxEnemies = 10; // Số lượng quái vật tối đa trong game
-    private bool isSummonBoss = false;
-    private int currentEnemyCount = 0; // Số lượng quái vật hiện tại
-    private List<GameObject> activeEnemies = new List<GameObject>(); // Danh sách quái vật đang tồn tại
-    void OnEnable()
-    {
-        EventManager.StartListening("OnCallBoss", OnCallBoss);
-        EventManager.StartListening("OnBossEnd", OnBossEnd);
+    [Header("Spawn Settings")]
+    [SerializeField] private List<GameObject> enemyPrefabs;
+    [SerializeField] private Vector2 spawnAreaMin;
+    [SerializeField] private Vector2 spawnAreaMax;
+    [SerializeField] private int maxEnemies = 10;
 
-        
+    [Header("Debug Settings")]
+    [SerializeField] private Color gizmoColor = Color.green;
+
+    private bool isBossActive;
+    private int currentEnemyCount;
+    private readonly List<GameObject> activeEnemies = new List<GameObject>();
+
+    #region Unity Lifecycle Methods
+
+    private void OnEnable()
+    {
+        SubscribeToEvents();
     }
 
-    private void OnBossEnd(object[] obj)
+    private void OnDisable()
     {
-       isSummonBoss = false;
+        UnsubscribeFromEvents();
     }
 
-    private void OnCallBoss(object[] parameters)
+    private void Start()
     {
-        isSummonBoss = true;
-        DispawnAll();
-        
+        InitializeEnemies();
     }
 
-    void OnDisable()
+    private void Update()
     {
-        EventManager.StopListening("OnCallBoss", OnCallBoss);
-        EventManager.StopListening("OnBossEnd", OnBossEnd);
+        if (!isBossActive)
+        {
+            ManageEnemySpawning();
+            CleanupDeadEnemies();
+        }
     }
 
-    void Start()
+    private void OnDrawGizmos()
     {
-        // Khởi tạo và spawn 10 quái vật
+        DrawSpawnArea();
+    }
+
+    #endregion
+
+    #region Event Management
+
+    private void SubscribeToEvents()
+    {
+        EventManager.StartListening("OnCallBoss", HandleBossSpawn);
+        EventManager.StartListening("OnBossEnd", HandleBossEnd);
+    }
+
+    private void UnsubscribeFromEvents()
+    {
+        EventManager.StopListening("OnCallBoss", HandleBossSpawn);
+        EventManager.StopListening("OnBossEnd", HandleBossEnd);
+    }
+
+    private void HandleBossSpawn(object[] parameters)
+    {
+        isBossActive = true;
+        DespawnAllEnemies();
+    }
+
+    private void HandleBossEnd(object[] parameters)
+    {
+        isBossActive = false;
+    }
+
+    #endregion
+
+    #region Enemy Management
+
+    private void InitializeEnemies()
+    {
+        ValidateEnemyPrefabs();
+        SpawnInitialEnemies();
+    }
+
+    private void ValidateEnemyPrefabs()
+    {
+        if (enemyPrefabs == null || enemyPrefabs.Count == 0)
+        {
+            Debug.LogError($"[{nameof(EnemySpawner)}] Enemy prefab list is empty or null!");
+            enabled = false;
+        }
+    }
+
+    private void SpawnInitialEnemies()
+    {
         for (int i = 0; i < maxEnemies; i++)
         {
             SpawnEnemy();
         }
     }
 
-    void Update()
+    private void ManageEnemySpawning()
     {
-        if (!isSummonBoss)
+        if (currentEnemyCount < maxEnemies)
         {
-            if (currentEnemyCount < maxEnemies)
-            {
-                SpawnEnemy();
-            }
-
-            for (int i = activeEnemies.Count - 1; i >= 0; i--)
-            {
-                if (activeEnemies[i] == null)
-                {
-                    activeEnemies.RemoveAt(i);
-                    currentEnemyCount--;
-                }
-            }
+            SpawnEnemy();
         }
-
     }
 
     private void SpawnEnemy()
     {
-        if (enemyPrefabs.Count == 0)
+        if (!CanSpawnEnemy()) return;
+
+        GameObject enemyPrefab = GetRandomEnemyPrefab();
+        Vector2 spawnPosition = GenerateRandomSpawnPosition();
+        GameObject newEnemy = InstantiateEnemy(enemyPrefab, spawnPosition);
+        Enemy enemyComponent = newEnemy.GetComponent<Enemy>();
+        enemyComponent.SetDataByCharacter(GetRandomCharacterData());
+        TrackEnemy(newEnemy);
+    }
+
+    private Character GetRandomCharacterData()
+    {
+        return new Character
         {
-            Debug.LogError("Enemy prefab list is empty! Cannot spawn enemies.");
-            return;
-        }
+            hp = Random.Range(5, 50),
+            attackMin = Random.Range(5, 10),
+            attackMax = Random.Range(10, 30),
+            moveSpeed = Random.Range(1, 2),
+            attackSpeed = Random.Range(1, 3)
+        };
+    }
 
+    private bool CanSpawnEnemy()
+    {
+        return enemyPrefabs != null && enemyPrefabs.Count > 0;
+    }
+
+    private GameObject GetRandomEnemyPrefab()
+    {
         int randomIndex = Random.Range(0, enemyPrefabs.Count);
-        GameObject selectedEnemyPrefab = enemyPrefabs[randomIndex];
+        return enemyPrefabs[randomIndex];
+    }
 
+    private Vector2 GenerateRandomSpawnPosition()
+    {
         float randomX = Random.Range(spawnAreaMin.x, spawnAreaMax.x);
         float randomY = Random.Range(spawnAreaMin.y, spawnAreaMax.y);
-        Vector2 spawnPosition = new Vector2(randomX, randomY);
+        return new Vector2(randomX, randomY);
+    }
 
-        GameObject newEnemy = Instantiate(selectedEnemyPrefab, spawnPosition, Quaternion.identity);
-        activeEnemies.Add(newEnemy);
+    private GameObject InstantiateEnemy(GameObject prefab, Vector2 position)
+    {
+        return Instantiate(prefab, position, Quaternion.identity);
+    }
+
+    private void TrackEnemy(GameObject enemy)
+    {
+        activeEnemies.Add(enemy);
         currentEnemyCount++;
     }
-    private void DispawnAll()
-    {
 
+    private void CleanupDeadEnemies()
+    {
+        for (int i = activeEnemies.Count - 1; i >= 0; i--)
+        {
+            if (activeEnemies[i] == null)
+            {
+                activeEnemies.RemoveAt(i);
+                currentEnemyCount--;
+            }
+        }
+    }
+
+    private void DespawnAllEnemies()
+    {
         foreach (GameObject enemy in activeEnemies)
         {
-            Destroy(enemy);
+            if (enemy != null)
+            {
+                Destroy(enemy);
+            }
         }
-
+        activeEnemies.Clear();
+        currentEnemyCount = 0;
     }
-    private void OnDrawGizmos()
+
+    #endregion
+
+    #region Gizmos
+
+    private void DrawSpawnArea()
     {
-        Gizmos.color = Color.green;
-        Gizmos.DrawLine(new Vector2(spawnAreaMin.x, spawnAreaMin.y), new Vector2(spawnAreaMax.x, spawnAreaMin.y)); // Bottom
-        Gizmos.DrawLine(new Vector2(spawnAreaMax.x, spawnAreaMin.y), new Vector2(spawnAreaMax.x, spawnAreaMax.y)); // Right
-        Gizmos.DrawLine(new Vector2(spawnAreaMax.x, spawnAreaMax.y), new Vector2(spawnAreaMin.x, spawnAreaMax.y)); // Top
-        Gizmos.DrawLine(new Vector2(spawnAreaMin.x, spawnAreaMax.y), new Vector2(spawnAreaMin.x, spawnAreaMin.y)); // Left
+        Gizmos.color = gizmoColor;
+        Vector2[] corners = new Vector2[]
+        {
+            new Vector2(spawnAreaMin.x, spawnAreaMin.y),
+            new Vector2(spawnAreaMax.x, spawnAreaMin.y),
+            new Vector2(spawnAreaMax.x, spawnAreaMax.y),
+            new Vector2(spawnAreaMin.x, spawnAreaMax.y)
+        };
+
+        for (int i = 0; i < corners.Length; i++)
+        {
+            Gizmos.DrawLine(corners[i], corners[(i + 1) % corners.Length]);
+        }
     }
 
-
-
+    #endregion
 }

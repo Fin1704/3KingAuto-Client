@@ -16,6 +16,6 @@ MonoBehaviour:
   Name: "\u0110\xE1 s\u01A1 c\u1EA5p HP"
   Level: 0
   Type: 0
-  power: 200
-  icon: {fileID: 21300000, guid: b0f8087cc3aa94acca8dbf378d2fc3e6, type: 3}
-  description: "T\u0103ng 200 hp"
+  power: 20
+  icon: {fileID: 21300000, guid: 36ec1c6500c1dc641b86ba20b01d6329, type: 3}
+  description: +20 HP

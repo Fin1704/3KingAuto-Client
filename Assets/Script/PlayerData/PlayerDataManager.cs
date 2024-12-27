@@ -1,14 +1,10 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerDataManager : MonoBehaviour
 {
-    // Instance tĩnh của PlayerDataManager (Singleton)
     public static PlayerDataManager Instance { get; private set; }
-
-    // Đối tượng PlayerData đã tạo sẵn từ ScriptableObject
     public PlayerData playerData; 
-
-    // Kiểm tra và đảm bảo chỉ có một instance
     private void Awake()
     {
         if (Instance == null)
@@ -21,6 +17,9 @@ public class PlayerDataManager : MonoBehaviour
             Destroy(gameObject); // Nếu đã có instance, hủy đi đối tượng này
         }
     }
-
+    private List<Rune> getListRunes()
+    {
+        return playerData.runes;
+    }
     
 }

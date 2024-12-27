@@ -18,6 +18,11 @@ public class HeroGUI : MonoBehaviour
     public TMP_Text hp_text;
     public TMP_Text speed_text;
 
+    public TMP_Text bonus_def_text;
+    public TMP_Text bonus_atk_text;
+    public TMP_Text bonus_hp_text;
+    public TMP_Text bonus_speed_text;
+
     private Character selectedCharacter;
     private Dictionary<int, GameObject> spawnedCharacters = new Dictionary<int, GameObject>();
     public Vector3 spawnPosition;
@@ -25,13 +30,22 @@ public class HeroGUI : MonoBehaviour
     public GameObject detailPanel;
     private void Start()
     {
-        
+
         button.onClick.AddListener(openGUI);
         battleButton.onClick.AddListener(Battle);
         DisplayCharacterCards();
         GUI.SetActive(false);
+        UpdateRuneBonus();
     }
+    private void UpdateRuneBonus()
+    {
+        Character dataRune = playerData.GetBonusRune();
+        bonus_def_text.text = dataRune.defense == 0 ? "" : "+" + dataRune.defense.ToString();
+        bonus_atk_text.text = dataRune.attackMax == 0 ? "" : "+" + dataRune.attackMin.ToString() + "-" + dataRune.attackMax.ToString();
+        bonus_hp_text.text = dataRune.hp == 0 ? "" : "+" + dataRune.hp.ToString();
+        bonus_speed_text.text = dataRune.moveSpeed == 0 ? "" : "+" + dataRune.moveSpeed.ToString();
 
+    }
     private void DisplayCharacterCards()
     {
         if (!playerData.is_get) return;
@@ -48,7 +62,7 @@ public class HeroGUI : MonoBehaviour
     }
 
     private void UpdateCardWithCharacterData(GameObject card, Character character)
-    
+
     {
         Transform imageTransform = card.transform.Find("Mask");
         Instantiate(character.icon, imageTransform);
@@ -65,12 +79,12 @@ public class HeroGUI : MonoBehaviour
 
             if (buttonCurrent)
             {
-               buttonCurrent.color=Color.red;
+                buttonCurrent.color =new Color(97, 97, 103);
             }
-            buttonCurrent=card.GetComponent<Image>();
-            buttonCurrent.color=Color.blue;
+            buttonCurrent = card.GetComponent<Image>();
+            buttonCurrent.color = new Color(198, 198, 198);
             ShowCharacterInfo(character.id);
-           
+
 
         });
     }
@@ -78,6 +92,8 @@ public class HeroGUI : MonoBehaviour
     private void ShowCharacterInfo(int id)
     {
         Character character = playerData.GetCharacterById(id);
+        UpdateRuneBonus();
+
         selectedCharacter = character;
         if (battleButton != null)
         {
@@ -85,21 +101,25 @@ public class HeroGUI : MonoBehaviour
             if (selectedCharacter.isBattle)
             {
                 buttonText.text = "Go Back";
+                battleButton.GetComponent<Image>().color = new Color(198, 198, 198);
+
             }
             else
             {
                 buttonText.text = "Battle";
+                battleButton.GetComponent<Image>().color = new Color(97, 97, 103);
+
             }
         }
         Debug.Log($"Selected Character: {character.isBattle}");
 
-        level_text.text = character.exp.ToString()+"/"+character.level.ToString();
+        level_text.text = character.exp.ToString() + "/" + character.level.ToString();
         def_text.text = character.defense.ToString();
         atk_text.text = $"{character.attackMin}-{character.attackMax}";
         hp_text.text = character.hp.ToString();
 
         speed_text.text = character.moveSpeed.ToString();
-              detailPanel.SetActive(true);
+        detailPanel.SetActive(true);
 
     }
 
@@ -132,7 +152,16 @@ public class HeroGUI : MonoBehaviour
 
         GameObject spawnedCharacter = Instantiate(selectedCharacter.character, spawnPosition, Quaternion.identity);
         Player spawnedCharacterData = spawnedCharacter.GetComponent<Player>();
-        spawnedCharacterData.SetDataByCharacter(selectedCharacter);
+        Character dataRune = playerData.GetBonusRune();
+        Character dataCharacter = playerData.GetCharacterById(selectedCharacter.id);
+        dataCharacter.hp += dataRune.hp;
+        dataCharacter.attackMin += dataRune.attackMin;  
+        dataCharacter.attackMax += dataRune.attackMax;  
+        dataCharacter.defense += dataRune.defense;  
+        dataCharacter.attackSpeed += dataRune.attackSpeed;  
+        dataCharacter.moveSpeed += dataRune.moveSpeed;  
+        
+        spawnedCharacterData.SetDataByCharacter(dataCharacter);
         spawnedCharacters.Add(selectedCharacter.id, spawnedCharacter);
         selectedCharacter.isBattle = true;
         if (battleButton != null)
@@ -141,10 +170,14 @@ public class HeroGUI : MonoBehaviour
             if (selectedCharacter.isBattle)
             {
                 buttonText.text = "Go Back";
+                battleButton.GetComponent<Image>().color = new Color(198, 198, 198);
+
             }
             else
             {
                 buttonText.text = "Battle";
+                battleButton.GetComponent<Image>().color = new Color(97, 97, 103);
+
             }
         }
 
@@ -152,9 +185,9 @@ public class HeroGUI : MonoBehaviour
 
     private void openGUI()
     {
-                EventManager.FireEvent("OnOpenUI", "HeroGUI");
+        EventManager.FireEvent("OnOpenUI", "HeroGUI");
 
-      detailPanel.SetActive(false);
+        detailPanel.SetActive(false);
         DisplayCharacterCards();
         GUI.SetActive(!GUI.activeSelf);
     }
@@ -170,5 +203,6 @@ public class HeroGUI : MonoBehaviour
             spawnedCharacters.Remove(selectedCharacter.id);
         }
         battleButton.GetComponentInChildren<TMP_Text>().text = "Battle";
+        battleButton.GetComponent<Image>().color = new Color(97, 97, 103);
     }
 }

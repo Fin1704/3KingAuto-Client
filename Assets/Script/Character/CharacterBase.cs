@@ -187,8 +187,14 @@ private int baseSortingOrder = 0;
     public virtual void TakeDamage(float damage)
     {
         if (isDead) return;
-
+        damage -= Random.Range(0, defense);
+        if (damage<0)    {
+            damage=0;
+        }
         currentHP -= damage;
+        if (currentHP<0){
+            currentHP=0;
+        }
         if (healthBar != null)
         {
             healthBar.SetHealth(currentHP);

@@ -59,4 +59,43 @@ public class PlayerData : ScriptableObject
         }
         return null;  
     }
+    public bool UseGem(int cost){
+        if(gem>=cost){
+            gem-=cost;
+            return true;
+        }
+        return false;
+    }
+    public void SetGold(int amount){
+        gold=amount;
+    }
+     
+     public bool UseGold(int cost){
+        if(gold>=cost){
+            gold-=cost;
+            return true;
+        }
+        return false;
+    }
+    public Character GetBonusRune(){
+        Character character = new Character();
+        foreach (var rune in runes)
+        { 
+            if(rune.isEquipped==false) continue;
+            if(rune.runeData.Type==RuneType.hp){
+                character.hp+=rune.runeData.power;
+            }else if(rune.runeData.Type==RuneType.attackMin){
+                character.attackMin+=rune.runeData.power;
+            }else if(rune.runeData.Type==RuneType.attackMax){
+                character.attackMax+=rune.runeData.power;
+            }else if(rune.runeData.Type==RuneType.defense){
+                character.defense+=rune.runeData.power;
+            }else if(rune.runeData.Type==RuneType.attackSpeed){
+                character.attackSpeed+=rune.runeData.power;
+            }else if(rune.runeData.Type==RuneType.moveSpeed){
+                character.moveSpeed+=rune.runeData.power;
+            }
+        }
+        return character;
+    }
 }

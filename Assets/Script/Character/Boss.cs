@@ -1,6 +1,9 @@
 using System.Collections;
+using System.Text;
+using Newtonsoft.Json;
 using Spine.Unity;
 using UnityEngine;
+using UnityEngine.Networking;
 
 
 public class Boss : CharacterBase
@@ -16,16 +19,28 @@ public class Boss : CharacterBase
     public SkeletonAnimation effect_appear;
     private MeshRenderer meshRenderer;
     protected bool canMove = false;
+    private Transform targetTransform;
+    private Transform selfTransform;
+
     public override void Start()
     {
+        healthBar.slider.gameObject.SetActive(false);
         base.Start();
-
         meshRenderer = GetComponent<MeshRenderer>();
+        selfTransform = transform;
+        if (target != null)
+            targetTransform = target.transform;
+    }
 
-
+    // Update target transform when target changes
+    private void UpdateTargetReference(Player newTarget)
+    {
+        target = newTarget;
+        targetTransform = newTarget?.transform;
     }
     public void PlayAppearEffect()
     {
+        SetDataByCharacter(GetRandomCharacterData());
         if (effect_appear != null)
         {
             effect_appear.AnimationState.SetAnimation(0, "animation_0", false);
@@ -38,6 +53,8 @@ public class Boss : CharacterBase
         meshRenderer.enabled = true;
         Destroy(effect);
         skeletonAnimation.AnimationState.SetAnimation(0, "show", false);
+                healthBar.slider.gameObject.SetActive(true);
+
         StartCoroutine(StartBoss(1.5f));
 
 
@@ -65,8 +82,32 @@ public class Boss : CharacterBase
     {
         base.Die();
         StartCoroutine(Dispawn());
-        EventManager.FireEvent("OnBossDeath");
+        StartCoroutine(KillBossRequest());
     }
+ private Character GetRandomCharacterData()
+    {
+        return new Character
+        {
+            hp = Random.Range(1, 50)*100,
+            attackMin = Random.Range(5, 10),
+            attackMax = Random.Range(2, 10)*15,
+            defense= Random.Range(0, 10),
+            moveSpeed = Random.Range(1, 2),
+            attackSpeed = Random.Range(1, 3)
+        };
+    }
+
+    private IEnumerator Dispawn()
+    {
+        yield return new WaitForSeconds(1.5f);
+        if (itemDropPrefab != null)
+        {
+            ObjectPool.SpawnFromPool(itemDropPrefab, transform.position, Quaternion.identity, UIOnMap.transform);
+        }
+        gameObject.SetActive(false); // Instead of destroying, return to pool
+        ObjectPool.ReturnToPool(gameObject);
+    }
+
     public void SetDataByCharacter(Character data)
     {
         maxHP = data.hp;
@@ -75,17 +116,7 @@ public class Boss : CharacterBase
         speed = data.moveSpeed;
         attackSpeed = data.attackSpeed;
     }
-    private IEnumerator Dispawn()
-    {
-        yield return new WaitForSeconds(1.5f);
-        Destroy(gameObject);
-        if (itemDropPrefab != null)
-        {
 
-            GameObject item = Instantiate(itemDropPrefab, transform.position, Quaternion.identity, UIOnMap.transform);
-            // ItemDrop itemDrop = item.GetComponent<ItemDrop>();
-        }
-    }
     void FixedUpdate()
     {
         if (isDead) return;
@@ -171,22 +202,25 @@ public class Boss : CharacterBase
         }
     }
 
+    private float nextPhysicsCheck;
+    private const float PHYSICS_CHECK_INTERVAL = 0.2f; // Check every 0.2 seconds instead of every frame
+
     private Player FindNearestPlayer()
     {
-        Vector3 center = transform.position;
-        if (boxCollider2D != null)
-        {
-            center = boxCollider2D.bounds.center;
-        }
+        if (Time.time < nextPhysicsCheck) return target;
 
-        Collider2D[] playersInRange = Physics2D.OverlapCircleAll(center, detectionRange, playerLayer);
+        nextPhysicsCheck = Time.time + PHYSICS_CHECK_INTERVAL;
+        Vector3 center = boxCollider2D != null ? boxCollider2D.bounds.center : selfTransform.position;
+
+        Collider2D[] playersInRange = new Collider2D[10]; // Preallocate array
+        int hitCount = Physics2D.OverlapCircleNonAlloc(center, detectionRange, playersInRange, playerLayer);
 
         Player nearestPlayer = null;
         float closestDistance = Mathf.Infinity;
 
-        foreach (Collider2D playerCollider in playersInRange)
+        for (int i = 0; i < hitCount; i++)
         {
-            Player player = playerCollider.GetComponent<Player>();
+            Player player = playersInRange[i].GetComponent<Player>();
             if (player != null && !player.isDead)
             {
                 float distance = Vector2.Distance(center, player.transform.position);
@@ -200,6 +234,7 @@ public class Boss : CharacterBase
 
         return nearestPlayer;
     }
+
 
     private void MoveRandomly()
     {
@@ -231,18 +266,30 @@ public class Boss : CharacterBase
 
     private void MoveTowardsTarget()
     {
-        if (target != null)
+        if (targetTransform != null)
         {
-            Vector2 direction = (target.transform.position - transform.position).normalized;
-            rb.velocity = direction * speed;
-            transform.localScale = new Vector3(direction.x < 0 ? 1 : -1, 1, 1);
+            Vector2 currentPos = selfTransform.position;
+            Vector2 targetPos = targetTransform.position;
+            Vector2 direction = (targetPos - currentPos);
+            float distance = direction.magnitude;
+
+            if (distance > 0.01f) // Avoid normalization if too close
+            {
+                direction /= distance; // Normalize
+                rb.velocity = direction * speed;
+                selfTransform.localScale = new Vector3(direction.x < 0 ? 1 : -1, 1, 1);
+            }
+            else
+            {
+                rb.velocity = Vector2.zero;
+            }
         }
         else
         {
             MoveRandomly();
-
         }
     }
+
     private void TryAttackPlayer()
     {
         if (!isAttacking && Time.time - lastAttackTime >= 1f / attackSpeed)
@@ -295,5 +342,42 @@ public class Boss : CharacterBase
 
         Gizmos.color = Color.black;
         Gizmos.DrawWireSphere(center, randomDameTextRange);
+    }
+     [System.Serializable]
+    public class KillBossRq
+    {
+        public string bossCode;
+    }
+   public class KillBossRs
+    {
+        public string success;
+        public Rune newRune;
+        public string message;
+    }
+    private IEnumerator KillBossRequest()
+    {
+        KillBossRq killBossData = new KillBossRq
+        {
+            bossCode = DataManager.Instance.Get<string>("bossCode"),
+        };
+        string jsonData = JsonUtility.ToJson(killBossData);
+        Debug.Log(jsonData);
+        using (UnityWebRequest request = new UnityWebRequest(DataManager.Instance.SERVER_URL + "/api/game/kill-boss", "POST"))
+        {
+            byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonData);
+            request.SetRequestHeader("Authorization", $"Bearer {DataManager.Instance.Get<string>("token")}");
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+            yield return request.SendWebRequest();
+            if (request.result == UnityWebRequest.Result.Success)
+            {
+                KillBossRs killBossRs = JsonConvert.DeserializeObject<KillBossRs>(request.downloadHandler.text);
+                PlayerDataManager.Instance.playerData.AddRune(killBossRs.newRune);
+                        EventManager.FireEvent("OnBossManagerEnd",killBossRs.newRune.id);
+
+            }
+
+        }
     }
 }

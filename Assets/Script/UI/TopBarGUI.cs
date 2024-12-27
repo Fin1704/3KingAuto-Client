@@ -23,7 +23,6 @@ public class TopBarGUI : MonoBehaviour
     void UpdateUI()
     {
         gold_text.text = playerData.gold.ToString();
-        gem_text.text = playerData.gem.ToString();
     }
 
 }

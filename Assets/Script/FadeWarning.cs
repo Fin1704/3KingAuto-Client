@@ -1,82 +1,172 @@
+using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class FadeWarning : MonoBehaviour
 {
-    public CanvasGroup canvasGroup;
-    public float fadeDuration = 0.5f; // Thời gian fade in/out cho mỗi lần chớp
-    public float totalDuration = 3f; // Tổng thời gian chớp tắt liên tục
-    public GameObject warningui;
+    [Header("UI References")]
+    [SerializeField] private CanvasGroup canvasGroup;
+    [SerializeField] private GameObject warningUI;
+    [SerializeField] private GameObject playTimePanel;
+    [SerializeField] private TMP_Text timeText;
 
-    public GameObject PlayTimePanel;
-    public TMP_Text timeText;
-    void Start()
+    [Header("Warning Settings")]
+    [SerializeField] private float fadeDuration = 0.5f;
+    [SerializeField] private float totalDuration = 3f;
+    [SerializeField] private int countdownDuration = 120; // 5 minutes in seconds
+
+    private readonly WaitForSeconds fadeWait;
+    private readonly WaitForSeconds oneSecond;
+    private readonly System.Text.StringBuilder stringBuilder;
+    private Coroutine activeWarningCoroutine;
+
+    public FadeWarning()
     {
-        canvasGroup = GetComponent<CanvasGroup>();
+        fadeWait = new WaitForSeconds(fadeDuration);
+        oneSecond = new WaitForSeconds(1);
+        stringBuilder = new System.Text.StringBuilder(5);
+    }
+
+    private void Awake()
+    {
+        InitializeComponents();
+    }
+private void OnEnable()
+    {
+        EventManager.StartListening("OnBossManagerEnd", TurnOffTime);
+
+
+    }
+
+    private void TurnOffTime(object[] obj)
+    {
+        playTimePanel.SetActive(false);
+    }
+
+    private void Start()
+    {
+        SetInitialState();
+    }
+
+    private void InitializeComponents()
+    {
+        if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
+        if (timeText == null) timeText = GetComponent<TMP_Text>();
+        
+        ValidateComponents();
+    }
+
+    private void ValidateComponents()
+    {
+        if (canvasGroup == null) Debug.LogError($"{nameof(canvasGroup)} not assigned!");
+        if (warningUI == null) Debug.LogError($"{nameof(warningUI)} not assigned!");
+        if (playTimePanel == null) Debug.LogError($"{nameof(playTimePanel)} not assigned!");
+        if (timeText == null) Debug.LogError($"{nameof(timeText)} not assigned!");
+    }
+
+    private void SetInitialState()
+    {
         canvasGroup.alpha = 0f;
+        warningUI.SetActive(false);
+        playTimePanel.SetActive(false);
     }
 
     public void TriggerWarning()
     {
-        warningui.SetActive(true);
-        StartCoroutine(FlickerEffect());
+        StopActiveWarning();
+        warningUI.SetActive(true);
+        activeWarningCoroutine = StartCoroutine(FlickerEffect());
     }
- public void TriggerStopWarning()
+
+    public void TriggerStopWarning()
     {
-        warningui.SetActive(false);
+        StopActiveWarning();
+        warningUI.SetActive(false);
     }
+
+    private void StopActiveWarning()
+    {
+        if (activeWarningCoroutine != null)
+        {
+            StopCoroutine(activeWarningCoroutine);
+            activeWarningCoroutine = null;
+        }
+    }
+
     private IEnumerator FlickerEffect()
     {
-        float elapsedTime = 0f;
+        float endTime = Time.time + totalDuration;
 
-        while (elapsedTime < totalDuration)
+        while (Time.time < endTime)
         {
-            yield return StartCoroutine(Fade(0f, 1f, fadeDuration));
-            yield return StartCoroutine(Fade(1f, 0f, fadeDuration));
-            elapsedTime += fadeDuration * 2;
+            yield return FadeSequence();
         }
-        warningui.SetActive(false);
-        PlayTimePanel.SetActive(true);
-        StartCoroutine(StartCountdown(300));
+
+        TransitionToCountdown();
     }
 
-    private IEnumerator Fade(float startAlpha, float endAlpha, float duration)
+    private IEnumerator FadeSequence()
     {
-        float timeElapsed = 0f;
+        yield return StartCoroutine(Fade(0f, 1f));
+        yield return fadeWait;
+        yield return StartCoroutine(Fade(1f, 0f));
+        yield return fadeWait;
+    }
 
-        while (timeElapsed < duration)
+    private void TransitionToCountdown()
+    {
+        warningUI.SetActive(false);
+        playTimePanel.SetActive(true);
+        StartCoroutine(StartCountdown(countdownDuration));
+    }
+
+    private IEnumerator Fade(float startAlpha, float endAlpha)
+    {
+        float elapsed = 0f;
+        float inverseTime = 1f / fadeDuration;
+
+        while (elapsed < fadeDuration)
         {
-            canvasGroup.alpha = Mathf.Lerp(startAlpha, endAlpha, timeElapsed / duration);
-            timeElapsed += Time.deltaTime;
+            canvasGroup.alpha = Mathf.Lerp(startAlpha, endAlpha, elapsed * inverseTime);
+            elapsed += Time.deltaTime;
             yield return null;
         }
 
         canvasGroup.alpha = endAlpha;
-
-
     }
-        private IEnumerator StartCountdown(int totalSeconds)
+
+    private IEnumerator StartCountdown(int totalSeconds)
     {
+        EventManager.FireEvent("OnBossManagerStart", totalSeconds);
         while (totalSeconds > 0)
         {
-            // Chuyển đổi giây sang định dạng mm:ss
-            string timeFormatted = FormatTime(totalSeconds);
-            timeText.text = timeFormatted;
-
-            yield return new WaitForSeconds(1); // Chờ 1 giây
-            totalSeconds--; // Giảm số giây còn lại
+            UpdateCountdownDisplay(totalSeconds);
+            yield return oneSecond;
+            totalSeconds--;
         }
 
-        // Khi kết thúc đếm ngược
-        timeText.text = "00:00";
+        UpdateCountdownDisplay(0);
+       
+        EventManager.FireEvent("OnBossManagerTimeUp", totalSeconds);
+         playTimePanel.SetActive(false);
+    }
+
+    private void UpdateCountdownDisplay(int seconds)
+    {
+        timeText.text = FormatTime(seconds);
     }
 
     private string FormatTime(int totalSeconds)
     {
-        int minutes = totalSeconds / 60; // Lấy số phút
-        int seconds = totalSeconds % 60; // Lấy số giây còn lại
-        return $"{minutes:D2}:{seconds:D2}"; // Định dạng thành mm:ss
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+        
+        stringBuilder.Clear()
+            .Append(minutes.ToString("D2"))
+            .Append(':')
+            .Append(seconds.ToString("D2"));
+            
+        return stringBuilder.ToString();
     }
 }
