@@ -1,0 +1,6 @@
+miner.png
+size:124,126
+filter:Linear,Linear
+pma:true
+icon_equip_pickax
+bounds:2,2,120,122

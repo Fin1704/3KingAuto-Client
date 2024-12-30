@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9873bf455df2ddb4bb727c438de6950f, type: 3}
+  m_Name: OrePrefabData
+  m_EditorClassIdentifier: 
+  oreMasterData:
+    _serializedList:
+    - Key: 1
+      Value: {fileID: 11400000, guid: fabde99efecf2cc479d85110deb71836, type: 2}
+    - Key: 2
+      Value: {fileID: 11400000, guid: 7bd674113865d6b42b8d5b1c7d202658, type: 2}
+    - Key: 3
+      Value: {fileID: 11400000, guid: 9222626853c3ab04e8380cbd47034728, type: 2}
+    - Key: 4
+      Value: {fileID: 11400000, guid: 8e084d4727efddd45b4ed79bb48174a4, type: 2}
+    - Key: 5
+      Value: {fileID: 11400000, guid: 5f043fa00a19f01459fd894294243294, type: 2}
+    - Key: 6
+      Value: {fileID: 11400000, guid: ab98f94178081174ea71ef5cc1fcd471, type: 2}
+    - Key: 7
+      Value: {fileID: 11400000, guid: 517ac3f0890a17649802e2a52fff8b79, type: 2}

@@ -1,0 +1,43 @@
+{
+"skeleton": {
+	"hash": "SUKg3vmPqqQ",
+	"spine": "4.2.38",
+	"x": -60,
+	"y": -61,
+	"width": 120,
+	"height": 122,
+	"images": "",
+	"audio": "./audio"
+},
+"bones": [
+	{ "name": "root" }
+],
+"slots": [
+	{ "name": "icon_equip_pickax", "bone": "root", "attachment": "icon_equip_pickax" }
+],
+"skins": [
+	{
+		"name": "default",
+		"attachments": {
+			"icon_equip_pickax": {
+				"icon_equip_pickax": { "width": 120, "height": 122 }
+			}
+		}
+	}
+],
+"animations": {
+	"animation": {
+		"bones": {
+			"root": {
+				"rotate": [
+					{},
+					{ "time": 0.3333, "value": 100 },
+					{ "time": 0.6667 },
+					{ "time": 1, "value": -100 },
+					{ "time": 1.3333 }
+				]
+			}
+		}
+	}
+}
+}

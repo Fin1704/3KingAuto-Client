@@ -36,6 +36,9 @@ private string serverUrl;
     }
         private void Start()
     {
+        if(PlayerPrefs.GetString("username")!=null){
+        usernameInput.text=PlayerPrefs.GetString("username");
+    }
         // Add click listener to login button
         loginButton.onClick.AddListener(HandleLogin);
         serverUrl=DataManager.Instance.SERVER_URL;
@@ -97,6 +100,7 @@ private string serverUrl;
 
             if (request.result == UnityWebRequest.Result.Success)
             {
+                PlayerPrefs.SetString("username",usernameInput.text);
                 Debug.Log("Login successful!");
                 HandleSuccessfulLogin(request.downloadHandler.text);
                 StartCoroutine(TransitionToMainScene());

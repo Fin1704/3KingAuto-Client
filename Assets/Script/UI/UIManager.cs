@@ -7,6 +7,7 @@ public class UIManager : MonoBehaviour
     public GameObject _RuneGUI;
     public GameObject _ShopGUI;
     public GameObject _RankGUI;
+    public GameObject _MinerGUI;
 
     void OnEnable()
     {
@@ -23,6 +24,7 @@ public class UIManager : MonoBehaviour
             _RuneGUI.SetActive(false);
             _ShopGUI.SetActive(false);
             _RankGUI.SetActive(false);
+            _MinerGUI.SetActive(false);
         }
         else if (nameUI == "HeroGUI")
         {
@@ -30,6 +32,8 @@ public class UIManager : MonoBehaviour
             _RuneGUI.SetActive(false);
             _ShopGUI.SetActive(false);
             _RankGUI.SetActive(false);
+                        _MinerGUI.SetActive(false);
+
 
         }
         else if (nameUI == "RuneGUI")
@@ -38,6 +42,8 @@ public class UIManager : MonoBehaviour
             _HeroGUI.SetActive(false);
             _ShopGUI.SetActive(false);
             _RankGUI.SetActive(false);
+                        _MinerGUI.SetActive(false);
+
 
         }
         else if (nameUI == "ShopGUI")
@@ -46,7 +52,15 @@ public class UIManager : MonoBehaviour
             _HeroGUI.SetActive(false);
             _RuneGUI.SetActive(false);
             _RankGUI.SetActive(false);
+                        _MinerGUI.SetActive(false);
 
+
+        }else if (nameUI == "MinerGUI")
+        {
+            _BossGUI.SetActive(false);
+            _HeroGUI.SetActive(false);
+            _RuneGUI.SetActive(false);
+            _ShopGUI.SetActive(false);
         }
     }
 

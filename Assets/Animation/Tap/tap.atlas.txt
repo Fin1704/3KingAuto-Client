@@ -1,0 +1,9 @@
+tap.png
+size:741,516
+filter:Linear,Linear
+pma:true
+circle
+bounds:2,2,512,512
+hand
+bounds:516,279,223,235
+offsets:5,1,228,237
