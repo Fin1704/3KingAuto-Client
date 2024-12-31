@@ -34,7 +34,7 @@ public class MinerAnimation : MonoBehaviour
         {
             if (PlayerDataManager.Instance.playerData.gold < 100)
             {
-                ToastManager.Instance.ShowToast("Not enough gold to mine");
+                ToastManager.Instance.ShowToast("Not enough gold to mine. Need 100 Gold!");
                 return;
             }
                     PlayerDataManager.Instance.playerData.UseGold(100);

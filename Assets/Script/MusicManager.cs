@@ -49,7 +49,7 @@ public void Start()
 
         if (musicSource.isPlaying && currentTrackIndex == trackIndex)
             return;
-
+       
         currentTrackIndex = trackIndex;
         musicSource.clip = musicTracks[trackIndex];
         musicSource.Play();

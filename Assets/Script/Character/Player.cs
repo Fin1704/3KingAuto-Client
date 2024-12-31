@@ -9,7 +9,6 @@ public class Player : CharacterBase
     public float detectionRange = 5f;
     public float attackRange = 1f;
     protected CharacterBase target;
-
     public LayerMask enemyLayer;
     private Vector2 randomDirection;
     private float randomMoveTimer = 0f;
@@ -32,11 +31,14 @@ public class Player : CharacterBase
     private const float DIRECTION_RIGHT = -1f;
     private const float DIRECTION_LEFT = 1f;
         private readonly EnemyCache enemyCache = new EnemyCache();
-
+private AudioSource hit;
     public override void Start()
     {
         base.Start();
         cachedTransform = transform;
+        hit=GetComponent<AudioSource>();
+        hit.loop=false;
+        hit.playOnAwake=false;
     }
     public override void Update()
     {
@@ -222,6 +224,8 @@ public class Player : CharacterBase
     {
         if (Time.time - lastAttackTime >= 1f / attackSpeed)
         {
+            
+            MusicManager.Instance.PlayMusic(1);
             isAttacking = true;
             AttackTarget();
             lastAttackTime = Time.time;
@@ -233,10 +237,13 @@ public class Player : CharacterBase
     {
         if (target != null)
         {
+           
             Vector3 direction = target.transform.position - transform.position;
             transform.localScale = new Vector3(direction.x < 0 ? 1 : -1, 1, 1);
             Attack();
+
             target.TakeDamage(Random.Range(attackMin, attackMax));
+             hit.Play();
             if (target.isDead)
             {
                 target = FindNearestEnemy();
