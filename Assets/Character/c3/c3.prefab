@@ -527,18 +527,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: c368bc36b49dc4f4d8e36a5f25565bf2, type: 2}
-  - {fileID: 2100000, guid: 74e0348e8470662458263642c725bc5d, type: 2}
-  - {fileID: 2100000, guid: c368bc36b49dc4f4d8e36a5f25565bf2, type: 2}
-  - {fileID: 2100000, guid: 74e0348e8470662458263642c725bc5d, type: 2}
-  - {fileID: 2100000, guid: c368bc36b49dc4f4d8e36a5f25565bf2, type: 2}
-  - {fileID: 2100000, guid: 74e0348e8470662458263642c725bc5d, type: 2}
-  - {fileID: 2100000, guid: c368bc36b49dc4f4d8e36a5f25565bf2, type: 2}
-  - {fileID: 2100000, guid: 74e0348e8470662458263642c725bc5d, type: 2}
-  - {fileID: 2100000, guid: c368bc36b49dc4f4d8e36a5f25565bf2, type: 2}
-  - {fileID: 2100000, guid: 74e0348e8470662458263642c725bc5d, type: 2}
-  - {fileID: 2100000, guid: c368bc36b49dc4f4d8e36a5f25565bf2, type: 2}
-  - {fileID: 2100000, guid: 74e0348e8470662458263642c725bc5d, type: 2}
+  - {fileID: 2100000, guid: 70273bb6ac379e74d8db315af74c4165, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -655,30 +644,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e8965da442d12e44b368303e4cb8748, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  animation:
+  animationList:
     _serializedList:
-    - Key: attack
-      Value: phyattack
-    - Key: death
-      Value: die
-    - Key: moveRevive
-      Value: move
     - Key: recovery
       Value: pickup
+    - Key: moveRevive
+      Value: move
     - Key: run
       Value: run
     - Key: idle
       Value: idle
+    - Key: death
+      Value: die
+    - Key: attack
+      Value: phyattack
   skeletonAnimation: {fileID: 1532042928905652118}
   characterName: Player
   maxHP: 100
   currentHP: 0
   attackMin: 7
   attackMax: 20
+  boxColliderCenter: {x: 0, y: 0}
   speed: 1
   defense: 1
   attackSpeed: 1
   isDead: 0
+  isUseSkill: 0
+  isChasing: 0
+  isAttacking: 0
   damageText: {fileID: 2396994303374334163}
   recoveryText: {fileID: 5155858819656118723}
   randomDameTextRange: 0.5
@@ -687,7 +680,6 @@ MonoBehaviour:
   homePosition: {x: 0, y: 3.63, z: 0}
   detectionRange: 5
   attackRange: 1
-  target: {fileID: 0}
   enemyLayer:
     serializedVersion: 2
     m_Bits: 65536

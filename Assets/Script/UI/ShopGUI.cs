@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
@@ -12,6 +13,8 @@ public class ShopGUI : MonoBehaviour
     public Button button;
     public GameObject GUI;
     public Button buyHero2;
+        public Button buyHero3;
+
 
 private void Start()
     {
@@ -19,6 +22,8 @@ private void Start()
      
         GUI.SetActive(false);
         buyHero2.onClick.AddListener(buyHero2Button);
+                buyHero3.onClick.AddListener(buyHero3Button);
+
        
     }
  public class HeroResponse
@@ -33,7 +38,10 @@ private void Start()
     {
          StartCoroutine(SendPurchaseRequest(2));
     }
-
+  private void buyHero3Button()
+    {
+         StartCoroutine(SendPurchaseRequest(3));
+    }
     private void openGUI()
     {
                 EventManager.FireEvent("OnOpenUI", "ShopGUI");
@@ -68,7 +76,7 @@ private void Start()
                     HeroResponse response = JsonConvert.DeserializeObject<HeroResponse>(request.downloadHandler.text);
                     if (response != null && response.success)
                     {
-                        Debug.Log("Hero purchased successfully!");
+                        Debug.Log(request.downloadHandler.text);
                         Debug.Log($"Hero ID: {response.hero.id}, Level: {response.hero.level}");
                        ToastManager.Instance.ShowToast("Hero purchased successfully!");
                         PlayerDataManager.Instance.playerData.AddCharacter(response.hero);
