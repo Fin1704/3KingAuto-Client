@@ -92,6 +92,7 @@ public class BossGUI : MonoBehaviour
     private void CallBoss()
     {
         if (!ValidateBossSpawn()) return;
+        DataManager.Instance.Set("isBoss",true);
         StartCoroutine(SummonBossRequest());
 
         PlayerDataManager.Instance.playerData.UseGold(priceSummon);
@@ -178,7 +179,7 @@ public class SummonBossResponse  {
 
     private void OnBossDeath(object[] obj)
     {
-
+        DataManager.Instance.Set("isBoss", false);
         isHaveBoss = false;
         fadeWarning.TriggerStopWarning();
 

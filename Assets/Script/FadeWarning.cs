@@ -139,11 +139,13 @@ private void OnEnable()
     private IEnumerator StartCountdown(int totalSeconds)
     {
         EventManager.FireEvent("OnBossManagerStart", totalSeconds);
-        while (totalSeconds > 0)
+        bool isBoss=DataManager.Instance.Get<bool>("isBoss");
+        while (totalSeconds > 0 && isBoss )
         {
             UpdateCountdownDisplay(totalSeconds);
             yield return oneSecond;
             totalSeconds--;
+            isBoss=DataManager.Instance.Get<bool>("isBoss");
         }
 
         UpdateCountdownDisplay(0);

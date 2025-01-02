@@ -59,9 +59,8 @@ public class MinerAnimation : MonoBehaviour
 
     public IEnumerator MineMinerals()
     {
-    Debug.Log("Mining animation started 1"  );
 
-        yield return new WaitForSeconds(3);
+        yield return new WaitForSeconds(1.3f);
         mineAnimation.gameObject.SetActive(false);
         string ApiUrl = DataManager.Instance.SERVER_URL + "/api/game/miner";
         using (UnityEngine.Networking.UnityWebRequest request = UnityEngine.Networking.UnityWebRequest.Get(ApiUrl))
