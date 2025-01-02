@@ -88,8 +88,8 @@ public class Boss : CharacterBase
     {
         return new Character
         {
-            hp = Random.Range(1, 50)*100,
-            attackMin = Random.Range(5, 10),
+            hp = Random.Range(1, 50)*10,
+            attackMin = Random.Range(1, 10),
             attackMax = Random.Range(2, 10)*15,
             defense= Random.Range(0, 10),
             moveSpeed = Random.Range(1, 2),

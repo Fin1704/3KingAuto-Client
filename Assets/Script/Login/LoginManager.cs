@@ -125,6 +125,7 @@ private string serverUrl;
         playerData.is_get=true;
         playerData.gold=loginResponse.player.gems;
         playerData.userName=loginResponse.player.username;
+        playerData.lastDailyReward=loginResponse.player.lastDailyReward;
         DataManager.Instance.Set("token",loginResponse.token);
                  DataManager.Instance.Set("new_player",false);
 
@@ -168,4 +169,5 @@ public class PlayerServer
     public int id { get; set; }
     public string username { get; set; }
     public int gems { get; set; }
+    public string lastDailyReward { get; set; }
 }

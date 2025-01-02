@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System;
 
 [CreateAssetMenu(fileName = "PlayerData", menuName = "Game/PlayerData")]
 public class PlayerData : ScriptableObject
@@ -8,7 +9,7 @@ public class PlayerData : ScriptableObject
     public string userName;
     public int gold;
     public int gem;
- 
+ public string lastDailyReward;
     public List<Rune> runes = new List<Rune>();
     public List<Character> characters=new List<Character>();
 
@@ -20,6 +21,7 @@ public class PlayerData : ScriptableObject
         userName = string.Empty; 
         gold = 0;
         gem = 0;
+        lastDailyReward = string.Empty;
         characters = new List<Character>();
         runes = new List<Rune>();
     }
@@ -29,6 +31,7 @@ public class PlayerData : ScriptableObject
         gold = 0;
         gem = 0;
         userName = "Unknown";
+        lastDailyReward = string.Empty;
         characters.Clear();
         runes.Clear();
     }
@@ -47,6 +50,14 @@ public class PlayerData : ScriptableObject
     {
         rune.runeData=runeMasterData.runeMasterData[rune.id];
         runes.Add(rune);
+    }
+    public void UpdateRewardDate()
+    {
+          DateTime today = DateTime.Today;
+
+        // Chuyển thành chuỗi định dạng "yyyy-MM-dd"
+        string formattedDate = today.ToString("yyyy-MM-dd");
+        lastDailyReward = formattedDate;
     }
     public Character GetCharacterById(int id)
     {

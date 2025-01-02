@@ -8,6 +8,7 @@ public class UIManager : MonoBehaviour
     public GameObject _ShopGUI;
     public GameObject _RankGUI;
     public GameObject _MinerGUI;
+    public GameObject _SevenLoginGUI;
 
     void OnEnable()
     {
@@ -25,6 +26,8 @@ public class UIManager : MonoBehaviour
             _ShopGUI.SetActive(false);
             _RankGUI.SetActive(false);
             _MinerGUI.SetActive(false);
+            _SevenLoginGUI.SetActive(false);
+
         }
         else if (nameUI == "HeroGUI")
         {
@@ -32,7 +35,9 @@ public class UIManager : MonoBehaviour
             _RuneGUI.SetActive(false);
             _ShopGUI.SetActive(false);
             _RankGUI.SetActive(false);
-                        _MinerGUI.SetActive(false);
+            _MinerGUI.SetActive(false);
+            _SevenLoginGUI.SetActive(false);
+
 
 
         }
@@ -42,7 +47,9 @@ public class UIManager : MonoBehaviour
             _HeroGUI.SetActive(false);
             _ShopGUI.SetActive(false);
             _RankGUI.SetActive(false);
-                        _MinerGUI.SetActive(false);
+            _MinerGUI.SetActive(false);
+            _SevenLoginGUI.SetActive(false);
+
 
 
         }
@@ -52,15 +59,32 @@ public class UIManager : MonoBehaviour
             _HeroGUI.SetActive(false);
             _RuneGUI.SetActive(false);
             _RankGUI.SetActive(false);
-                        _MinerGUI.SetActive(false);
+            _MinerGUI.SetActive(false);
+            _SevenLoginGUI.SetActive(false);
 
 
-        }else if (nameUI == "MinerGUI")
+
+        }
+        else if (nameUI == "MinerGUI")
         {
             _BossGUI.SetActive(false);
             _HeroGUI.SetActive(false);
             _RuneGUI.SetActive(false);
             _ShopGUI.SetActive(false);
+            _RankGUI.SetActive(false);
+            _SevenLoginGUI.SetActive(false);
+
+        }
+        else if (nameUI == "SevenLoginGUI")
+        {
+            _BossGUI.SetActive(false);
+            _HeroGUI.SetActive(false);
+            _RuneGUI.SetActive(false);
+            _ShopGUI.SetActive(false);
+            _MinerGUI.SetActive(false);
+            _RankGUI.SetActive(false);
+
+
         }
     }
 

@@ -35,6 +35,7 @@ public class GameDataFetcher : MonoBehaviour
         playerData.userName = userData.userName;
         playerData.gold = userData.gold;
         playerData.gem = userData.gem;
+        playerData.lastDailyReward=userData.lastDailyReward;
         foreach (var rune in userData.runes)
         {
             playerData.AddRune(rune);
@@ -54,6 +55,7 @@ public class UserData
     public string userName;
     public int gold;
     public int gem;
+    public string lastDailyReward;
     public Character[] characters;
     public Rune[] runes;
 }

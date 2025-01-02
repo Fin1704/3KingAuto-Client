@@ -3688,7 +3688,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SERVER_URL: 
-  isDev: 0
+  isDev: 1
 --- !u!4 &1726357035
 Transform:
   m_ObjectHideFlags: 0

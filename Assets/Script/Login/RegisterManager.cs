@@ -106,6 +106,8 @@ private string serverUrl;
         playerData.is_get=true;
         playerData.gold=loginResponse.player.gems;
         playerData.userName=loginResponse.player.username;
+                playerData.lastDailyReward=loginResponse.player.lastDailyReward;
+
         DataManager.Instance.Set("token",loginResponse.token);
          DataManager.Instance.Set("new_player",true);
         foreach (var rune in loginResponse.runes)
