@@ -37,15 +37,16 @@ public class MinerAnimation : MonoBehaviour
                 ToastManager.Instance.ShowToast("Not enough gold to mine. Need 100 Gold!");
                 return;
             }
-                    PlayerDataManager.Instance.playerData.UseGold(100);
+
+            PlayerDataManager.Instance.playerData.UseGold(100);
 
             tapButton.interactable = false;
             mineAnimation.gameObject.SetActive(true);
-            mineAnimation.AnimationState.SetAnimation(0, "animation", false);
+            mineAnimation.AnimationState.SetAnimation(0, "animation", true);
 
-            await Task.Delay(1333); // 1 second delay
+
+    Debug.Log("Mining animation started");
             StartCoroutine(MineMinerals());
-            mineAnimation.gameObject.SetActive(false);
 
         }
         catch (Exception ex)
@@ -58,14 +59,17 @@ public class MinerAnimation : MonoBehaviour
 
     public IEnumerator MineMinerals()
     {
+    Debug.Log("Mining animation started 1"  );
 
+        yield return new WaitForSeconds(3);
+        mineAnimation.gameObject.SetActive(false);
         string ApiUrl = DataManager.Instance.SERVER_URL + "/api/game/miner";
         using (UnityEngine.Networking.UnityWebRequest request = UnityEngine.Networking.UnityWebRequest.Get(ApiUrl))
         {
             request.SetRequestHeader("Authorization", "Bearer " + DataManager.Instance.Get<string>("token"));
             // Gửi request
             yield return request.SendWebRequest();
-
+            Debug.Log(request.downloadHandler.text);
             if (request.result == UnityEngine.Networking.UnityWebRequest.Result.ConnectionError ||
                 request.result == UnityEngine.Networking.UnityWebRequest.Result.ProtocolError)
             {
@@ -75,6 +79,7 @@ public class MinerAnimation : MonoBehaviour
             {
                 // Parse JSON response
                 var jsonResponse = JsonConvert.DeserializeObject<MiningResponse>(request.downloadHandler.text);
+
                 if (jsonResponse.success)
                 {
                     panel.SetActive(true);
@@ -102,7 +107,7 @@ public class MinerAnimation : MonoBehaviour
 public class MiningResponse
 {
     public bool success;
-        public int selectedId;
+    public int selectedId;
     public int rewardGems;
     public string message;
 }
